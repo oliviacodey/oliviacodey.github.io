@@ -1,8 +1,8 @@
 ---
 title: Service accounts
 date: 2024-05-06
-categories: [k8s, service accounts]
-tags: [sa,service accounts]     # TAG names should always be lowercase
+categories: [k8s,api]
+tags: [sa,service accounts,api]     # TAG names should always be lowercase
 ---
 
 ## Beskrivning
