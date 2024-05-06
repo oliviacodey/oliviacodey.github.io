@@ -1,3 +1,10 @@
+---
+title: Quick examples
+date: 2024-05-06
+categories: [K8S, quick]
+tags: [quick,commands]     # TAG names should always be lowercase
+---
+
 # Run a quick simple pod
 
 ## Create a quick pod
