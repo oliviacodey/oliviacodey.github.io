@@ -9,6 +9,8 @@ pin: true
 ![Desktop View](img/olivia_checkbox_thumb2.jpeg){: width="200" height="200" .left}
 This is a place for setting up new goals and tracking my progress.
 
+<br style="clear:both" />
+
 ### Progress so far
 
 - [ ] Setup
