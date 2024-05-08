@@ -1,13 +1,13 @@
 ---
-title: Kubernetes
-date: 2024-05-07
+title: Progress
+date: 2024-05-08
 categories: [k8s,Start]
-tags: [welcome]     # TAG names should always be lowercase
+tags: [bio,progress]     # TAG names should always be lowercase
 pin: true
 ---
 
-![Desktop View](img/olivia_notes1.jpeg){: width="100" height="100" .left}
-Welcome to my Kubernetes adventure! Here's a peek into my journey of setting up and diving into the wonders of Kubernetes. This page is first and foremost for my self. A place to write and organize my notes.
+![Desktop View](olivia_checkbox_thumb2.jpeg){: width="100" height="100" .left}
+This is a place for setting up new goals and tracking my progress.
 
 ### Progress so far
 
@@ -16,4 +16,5 @@ Welcome to my Kubernetes adventure! Here's a peek into my journey of setting up 
   - [x] loadbalancer
   - [x] helm
   - [x] cd from git
+    - [ ] make private with ssh
   - [ ] vault
