@@ -18,3 +18,17 @@ This is a place for setting up new goals and tracking my progress.
   - [x] cd from git
     - [ ] make private with ssh
   - [ ] vault
+  - [ ] Private register
+- [ ] Config
+  - [x] Persistant Storage
+    - [x] NFS PV
+    - [x] NFS StorageClass
+  - [x] Secrets
+    - [ ] Vault
+- [ ] Run
+  - [x] Deployments
+  - [x] Public IP-Addresses
+  - [ ] Ad Hoc commands
+    - [x] Run a container
+    - [x] Expose the container
+    - [ ] Mutch more
