@@ -6,7 +6,7 @@ tags: [bio,progress]     # TAG names should always be lowercase
 pin: true
 ---
 
-![Desktop View](olivia_checkbox_thumb2.jpeg){: width="100" height="100" .left}
+![Desktop View](img/olivia_checkbox_thumb2.jpeg){: width="100" height="100" .left}
 This is a place for setting up new goals and tracking my progress.
 
 ### Progress so far
