@@ -5,16 +5,18 @@ categories: [Linux,storage]
 tags: [linux,lvm,resize]     # TAG names should always be lowercase
 ---
 
-### Extend the size in vmware
+### Prerequisite
 
-## Make sure linux detects the new physical size
+Extend the size of the virtual or physical harddrive.
+
+### Make sure linux detects the new physical size
 ```bash
 lsblk
 echo 1 > /sys/block/sda/device/rescan
 lsblk
 ```
 
-## Extend the partition
+### Extend the partition
 
 ```bash
 parted
@@ -23,7 +25,7 @@ resizepart 2 100%F
 quit
 ```
 
-## Resize the LVM
+### Resize the LVM
 
 ```bash
 pvresize /dev/sda2
