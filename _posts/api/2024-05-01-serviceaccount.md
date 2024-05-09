@@ -12,7 +12,11 @@ Kubernetes offers two distinct ways for clients that run within your cluster to 
 
 |command line|no|
 
+## Where
+
 Mounted under /var/run/secrets/kubernetes.io/serviceaccount/token
+
+## Use
 
 ```yaml
 apiVersion: v1

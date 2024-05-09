@@ -10,8 +10,8 @@ A ConfigMap is an API object used to store non-confidential data in key-value pa
 
 ## Why
 A easyer way to change something in a deployment without having to apply the whole deployment again.
-
 Can be used for mounting a file in a pod.
+
 
 ```yaml
 apiVersion: v1
@@ -24,7 +24,9 @@ data:
 
 ## Create a configmap from file
 
+```bash
 kubectl create configmap mediawiki --from-file ./LocalSettings.php
+```
 
 ## Mounta en configmap i en pod
 
