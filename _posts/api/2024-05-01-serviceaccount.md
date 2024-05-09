@@ -5,13 +5,14 @@ categories: [k8s,api]
 tags: [sa,service accounts,api]     # TAG names should always be lowercase
 ---
 
-## Beskrivning
+## What
 
-"Service accounts are identities that are intended for use by applications instead of people."
+Service accounts are identities that are intended for use by applications instead of people.
+Kubernetes offers two distinct ways for clients that run within your cluster to authenticate to the API server
 
-command line: no
+|command line|no|
 
-Monterad under /var/run/secrets/kubernetes.io/serviceaccount/token
+Mounted under /var/run/secrets/kubernetes.io/serviceaccount/token
 
 ```yaml
 apiVersion: v1
