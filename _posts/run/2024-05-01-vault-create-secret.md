@@ -1,5 +1,5 @@
 ---
-title: Configure Vault
+title: Create secret in Vault
 date: 2024-05-09
 categories: [k8s,Configure]
 tags: [k8s,configure,vault]     # TAG names should always be lowercase
@@ -48,85 +48,63 @@ export VAULT_ADDR='http://127.0.0.1:8200'
 vault login "token here"
 ```
 
-## Basic Secret Injection
+## Basic Secret
 
-In order for us to start using secrets in vault, we need to setup a policy.
+### Create a secret via the GUI or CLI
+
+```bash
+vault kv put secret/my-apps-secrets/mariadb username='giraffe' password='salsa'
+```
+
+View the new secret via the browser or:
+
+```bash
+vault kv get secret/my-apps-secrets/mariadb
+```
+
+### Create a (access) policy to that secret
+
+```plaintext '/home/vault/my-apps-secret-policy.hcl'
+path "secret/data/my-apps-secrets/*" {
+  capabilities = [“read”]
+}
+```
+
+```bash
+vault policy write my-apps-secret-policy /home/vault/my-apps-secret-policy.hcl
+```
+
+or
+
+```bash
+vault policy write my-apps-secret-policy - <<EOF
+path "secret/data/my-apps-secrets/*" {
+  capabilities = [“read”]
+}
+EOF
+```
+
+### Create a token to access the secret
+
+vault token create -policy my-apps-secret-policy
+
+Try out the token
+
+curl --header "X-Vault-Token: hvs.uRRJCwxYgZOz7GP0fjTbMnZT" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
+
+## Access the secret via a ServiceAccount
+
+Create a role that lets the k8s sa "my-apps-sa" use the policy "my-apps-secret-policy"
 
 ```shell
-#Create a role for our app
-
-kubectl -n vault-example exec -it vault-example-0 sh 
-
-vault write auth/kubernetes/role/basic-secret-role \
-   bound_service_account_names=basic-secret \
-   bound_service_account_namespaces=vault-example \
-   policies=basic-secret-policy \
-   ttl=1h
+vault write auth/kubernetes/role/my-apps-role \
+   bound_service_account_names=my-apps-sa \
+   bound_service_account_namespaces=my-app \
+   policies=my-apps-secret-policy \
+   ttl=168h
 ```
 
 The above maps our Kubernetes service account, used by our pod, to a policy.
-Now lets create the policy to map our service account to a bunch of secrets
-
-```bash
-kubectl -n vault-example exec -it vault-example-0 sh
-cat <<EOF > /home/vault/app-policy.hcl
-path "secret/basic-secret/*" {
-  capabilities = ["read"]
-}
-EOF
-vault policy write basic-secret-policy /home/vault/app-policy.hcl
-exit
-```
-
-vault kv put secret/basic-secret/helloworld username=dbuser password=sUp3rS3cUr3P@ssw0rd
-
-Create a secret at path secret/devwebapp/config with a username and password
-
-```bash
-vault kv put secret/devwebapp/config username='giraffe' password='salsa'
-```
-
-Verify that the secret is stored at the path secret/devwebapp/config via the browser or:
-
-```bash
-vault kv get -format=json secret/devwebapp/config
-```
-
-Export the following variable on the kubernetes cluster
-
-> Once the vault is up and running the applications can start using it directly. Se example bellow.
-{: .prompt-tip }
-
-```bash
-EXTERNAL_VAULT_ADDR=192.168.148.37
-```
-
-Create a Kubernetes service account named internal-app
-kubectl create sa internal-app
-
-Define a pod named devwebapp with the web application that sets the VAULT_ADDR to EXTERNAL_VAULT_ADDR
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: devwebapp
-  labels:
-    app: devwebapp
-spec:
-  serviceAccountName: internal-app
-  containers:
-    - name: app
-      image: burtlo/devwebapp-ruby:k8s
-      env:
-      - name: VAULT_ADDR
-        value: "http://$EXTERNAL_VAULT_ADDR:8200"
-      - name: VAULT_TOKEN
-        value: alfkjalkdfjalskjdflkajsdflk
-```
-
-kubectl apply --filename devwebapp.yaml
-kubectl get pods
 
 ## Vault Agent
 
@@ -136,7 +114,7 @@ Vault Agent Injector service configured to target an external Vault. The injecto
 helm repo add hashicorp https://helm.releases.hashicorp.com
 helm repo update
 helm install vault hashicorp/vault \
-    --set "global.externalVaultAddr=http://external-vault:8200"
+    --set "global.externalVaultAddr=http://vault:8200"
 
 kubectl get pods
 kubectl describe serviceaccount vault
@@ -152,6 +130,10 @@ metadata:
   annotations:
     kubernetes.io/service-account.name: vault
 type: kubernetes.io/service-account-token
+```
+
+```bash
+kubectl apply -f vault-secret.yaml
 ```
 
 Create a variable named VAULT_HELM_SECRET_NAME that stores the secret name.
@@ -193,35 +175,15 @@ Move these values to the Vault server and run
 ```bash
 ```
 
+This way didnt work. The only ways was by uploading the ca-cert in the gui.
+
 ```bash
 vault write auth/kubernetes/config \
      token_reviewer_jwt="$TOKEN_REVIEW_JWT" \
      kubernetes_host="$KUBE_HOST" \
-     kubernetes_ca_cert="/kube_ca.pem" \ # This way didnt work. The only ways was by uploading the ca-cert in the gui.
+     kubernetes_ca_cert="/kube_ca.pem" \
      tls_skip_verify="true"
 ```
-
-For a Vault client to read the secret data defined in the Start Vault section requires that the read capability be granted for the path secret/data/devwebapp/config
-
-```bash
-vault policy write devwebapp - <<EOF
-path "secret/data/devwebapp/config" {
-  capabilities = ["read"]
-}
-EOF
-```
-
-Create a Kubernetes authentication role named devweb-app.
-
-```bash
-vault write auth/kubernetes/role/devweb-app \
-    bound_service_account_names=vault \
-    bound_service_account_namespaces=mh-app \
-    policies=devwebapp \
-    ttl=24h
-```
-
-The role connects the Kubernetes service account, internal-app, and namespace, default, with the Vault policy, devwebapp. The tokens returned after authentication are valid for 24 hours.
 
 ### Inject secrets into the pod
 
@@ -231,9 +193,9 @@ The Vault Agent Injector only modifies a pod or deployment if it contains a spec
 apiVersion: v1
 kind: Pod
 metadata:
-  name: devwebapp-with-annotations
+  name: my-app
   labels:
-    app: devwebapp-with-annotations
+    app: my-app
   annotations:
     vault.hashicorp.com/agent-inject: 'true' # enables the Vault Agent Injector service
     vault.hashicorp.com/role: 'devweb-app' # Vault Kubernetes authentication role
@@ -247,7 +209,3 @@ spec:
 ```
 
 kubectl apply -f pod-devwebapp-with-annotations.yaml
-
-### Troubleshooting
-
-curl --header "X-Vault-Token: dfa.qHwhsdfdsfz1Qi3" <http://vault-server:8200/v1/sys/mounts>
