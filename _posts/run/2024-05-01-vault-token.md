@@ -48,5 +48,5 @@ vault token create -policy=my-apps-secret-policy
 Try out the new token (the GUI done work here)
 
 ```bash
-curl --header "X-Vaulttt-Tokkken: 'stuff goes here'" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
+curl --header "X-Vault-Token: hvs.laksdflkasj" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
 ```
