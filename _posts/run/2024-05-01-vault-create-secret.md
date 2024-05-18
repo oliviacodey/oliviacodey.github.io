@@ -90,7 +90,7 @@ vault token create -policy my-apps-secret-policy
 
 Try out the token
 
-curl --header "X-Vault-Token: hvs.uRRJCwxYgZOz7GP0fjTbMnZT" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
+curl --header "X-Vault-Token: 'the toke goes here'" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
 
 ## Access the secret via a ServiceAccount
 

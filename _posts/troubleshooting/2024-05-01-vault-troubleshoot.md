@@ -24,5 +24,5 @@ vault token lookup -accessor 7Y4nF5HnzMXalEaUyNz4TA8y
 ## Curl the secret with a token
 
 ```bash
-curl --header "X-Vault-Token: hvs.uRRJCwxYgZOz7GP0fjTbMnZT" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
+curl --header "X-Vault-Token: 'the token here'" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
 ```
