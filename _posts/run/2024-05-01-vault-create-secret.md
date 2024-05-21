@@ -1,6 +1,6 @@
 ---
 title: Create secret in Vault
-date: 2024-05-09
+date: 2024-05-19
 categories: [k8s,Configure]
 tags: [k8s,configure,vault]     # TAG names should always be lowercase
 ---
@@ -19,34 +19,6 @@ Vault can be accessed via these different methods
   * Mount Vault secrets to CSI Volume
       Deployment change required. Secret rotation not supported. Config templating from secrets NOT SUPPORTED. Requires helm as well as CSI driver and vault CSI provider.
 
-## Enter the Vault
-
-Start the shell in vault
-
-```bash
-podman logs vault # shows the default root token
-podman exec -it vault /bin/sh
-
-```
-
-Create the vault
-
-```bash
-vault operator init
-```
-
-Unseal the vault
-
-```bash
-vault operator unseal # Uses Shamir's secret sharing
-```
-
-Login to the vault
-
-```bash
-export VAULT_ADDR='http://127.0.0.1:8200'
-vault login "token here"
-```
 
 ## Basic Secret
 
@@ -64,14 +36,15 @@ vault kv get secret/my-apps-secrets/mariadb
 
 ### Create a (access) policy to that secret
 
-```plaintext '/home/vault/my-apps-secret-policy.hcl'
+```plaintext '/vault/config.d/my-apps-secret-policy.hcl'
 path "secret/data/my-apps-secrets/*" {
-  capabilities = [“read”]
+  capabilities = ["read"]
 }
 ```
 
 ```bash
-vault policy write my-apps-secret-policy /home/vault/my-apps-secret-policy.hcl
+vault policy write my-apps-secret-policy /vault/config.d/my-apps-secret-policy.hcl
+vault policy read my-apps-secret-policy
 ```
 
 or
@@ -79,7 +52,7 @@ or
 ```bash
 vault policy write my-apps-secret-policy - <<EOF
 path "secret/data/my-apps-secrets/*" {
-  capabilities = [“read”]
+  capabilities = ["read"]
 }
 EOF
 ```
@@ -90,7 +63,7 @@ vault token create -policy my-apps-secret-policy
 
 Try out the token
 
-curl --header "X-Vault-Token: 'the toke goes here'" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
+curl --header "X-Vault-Token: the toke goes here" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
 
 ## Access the secret via a ServiceAccount
 
@@ -99,7 +72,7 @@ Create a role that lets the k8s sa "my-apps-sa" use the policy "my-apps-secret-p
 ```shell
 vault write auth/kubernetes/role/my-apps-role \
    bound_service_account_names=my-apps-sa \
-   bound_service_account_namespaces=my-app \
+   bound_service_account_namespaces='*' \
    policies=my-apps-secret-policy \
    ttl=168h
 ```
@@ -148,43 +121,6 @@ This command filters the secrets by those that start with vault-token- and retur
 kubectl describe secret $VAULT_HELM_SECRET_NAME
 ```
 
-### Configure Kubernetes authentication
-
-Vault provides a Kubernetes authentication method that enables clients to authenticate with a Kubernetes Service Account Token.
-
-```bash
-export VAULT_ADDR='http://127.0.0.1:8200'
-vault login
-vault token lookup
-vault auth enable kubernetes
-```
-
-On the k8s cluster
-
-```bash
-TOKEN_REVIEW_JWT=$(kubectl get secret $VAULT_HELM_SECRET_NAME --output='go-template={{ .data.token }}' | base64 --decode)
-KUBE_CA_CERT=$(kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.certificate-authority-data}' | base64 --decode)
-KUBE_HOST=$(kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.server}') # or export KUBE_HOST="https://k8s-server-name:6443"
-```
-
-> Get the cluster issuer by running: kubectl get --raw /.well-known/openid-configuration | jq -r .issuer
-{: .prompt-tip }
-
-Move these values to the Vault server and run
-
-```bash
-```
-
-This way didnt work. The only ways was by uploading the ca-cert in the gui.
-
-```bash
-vault write auth/kubernetes/config \
-     token_reviewer_jwt="$TOKEN_REVIEW_JWT" \
-     kubernetes_host="$KUBE_HOST" \
-     kubernetes_ca_cert="/kube_ca.pem" \
-     tls_skip_verify="true"
-```
-
 ### Inject secrets into the pod
 
 The Vault Agent Injector only modifies a pod or deployment if it contains a specific set of annotations.
@@ -205,7 +141,6 @@ spec:
   containers:
     - name: app
       image: burtlo/devwebapp-ruby:k8s
-
 ```
 
 kubectl apply -f pod-devwebapp-with-annotations.yaml

@@ -35,6 +35,14 @@ vault write auth/token/roles/my-role \
 vault token create -role=my-role
 ```
 
+list all tokens
+
+```bash
+vault list auth/token/accessors
+
+vault token lookup -accessor 7Y4nF5HnzMXalEaUyNz4TA8y
+```
+
 ### Create the token
 
 Create a token and point it to a (access) poilcy
