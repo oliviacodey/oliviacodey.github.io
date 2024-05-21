@@ -26,12 +26,14 @@ Vault can be accessed via these different methods
 
 ```bash
 vault kv put secret/my-apps-secrets/mariadb username='giraffe' password='salsa'
+vault kv put secret/my-apps-secrets/mysql username='elephant' password='tacos'
 ```
 
 View the new secret via the browser or:
 
 ```bash
 vault kv get secret/my-apps-secrets/mariadb
+vault kv get secret/my-apps-secrets/mysql
 ```
 
 ### Create a (access) policy to that secret
@@ -63,15 +65,25 @@ vault token create -policy my-apps-secret-policy
 
 Try out the token
 
-curl --header "X-Vault-Token: the toke goes here" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb
+curl --header "X-Vault-Token: the-token-goes-here" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb | jq -r .data
 
 ## Access the secret via a ServiceAccount
 
 Create a role that lets the k8s sa "my-apps-sa" use the policy "my-apps-secret-policy"
 
 ```shell
-vault write auth/kubernetes/role/my-apps-role \
-   bound_service_account_names=my-apps-sa \
+vault write auth/kubernetes/role/my-apps-role \ `# the role name to use in the pod`
+   bound_service_account_names=my-apps-sa \ `# the serviceaccount to use in the pod`
+   bound_service_account_namespaces='*' \ `# the namespace that the pod uses`
+   policies=my-apps-secret-policy \ `# the acl policy for the secret`
+   ttl=168h
+```
+
+Use the same policy for a different pod in another namespace
+
+``` bash
+vault write auth/kubernetes/role/my-app2s-role \
+   bound_service_account_names=my-app2s-sa \
    bound_service_account_namespaces='*' \
    policies=my-apps-secret-policy \
    ttl=168h
@@ -82,44 +94,6 @@ The above maps our Kubernetes service account, used by our pod, to a policy.
 ## Vault Agent
 
 Vault Agent Injector service configured to target an external Vault. The injector service enables the authentication and secret retrieval for the applications, by adding Vault Agent containers as they are written to the pod automatically it includes specific annotations.
-
-```bash
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm repo update
-helm install vault hashicorp/vault \
-    --set "global.externalVaultAddr=http://vault:8200"
-
-kubectl get pods
-kubectl describe serviceaccount vault
-```
-
-Create a token
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: vault-token-g955r
-  annotations:
-    kubernetes.io/service-account.name: vault
-type: kubernetes.io/service-account-token
-```
-
-```bash
-kubectl apply -f vault-secret.yaml
-```
-
-Create a variable named VAULT_HELM_SECRET_NAME that stores the secret name.
-
-```bash
-VAULT_HELM_SECRET_NAME=$(kubectl get secrets --output=json | jq -r '.items[].metadata | select(.name|startswith("vault-token-")).name')
-```
-
-This command filters the secrets by those that start with vault-token- and returns the name of token
-
-```bash
-kubectl describe secret $VAULT_HELM_SECRET_NAME
-```
 
 ### Inject secrets into the pod
 
@@ -143,4 +117,6 @@ spec:
       image: burtlo/devwebapp-ruby:k8s
 ```
 
-kubectl apply -f pod-devwebapp-with-annotations.yaml
+``` bash
+kubectl apply -f my-pod-with-a-secret-from-vault.yaml
+```
