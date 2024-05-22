@@ -53,6 +53,7 @@ metadata:
   annotations:
     vault.hashicorp.com/agent-inject: 'true' # enables the Vault Agent Injector service
     vault.hashicorp.com/role: 'my-dev-apps-role' # Vault Kubernetes authentication role
+    vault.hashicorp.com/agent-pre-populate-only: 'false' # Can disable the sidecar agent, and only init container gets deployed
     vault.hashicorp.com/agent-inject-secret-credentials.txt: 'secret/data/my-dev-apps-secrets/mariadb' # the path to the secret
 spec:
   serviceAccountName: my-dev-apps-sa
