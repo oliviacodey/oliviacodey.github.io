@@ -19,37 +19,46 @@ Vault can be accessed via these different methods
   * Mount Vault secrets to CSI Volume
       Deployment change required. Secret rotation not supported. Config templating from secrets NOT SUPPORTED. Requires helm as well as CSI driver and vault CSI provider.
 
-
 ## Basic Secret
 
-### Create a secret via the GUI or CLI
+### Create a couple of secrets via the GUI or CLI
 
 ```bash
-vault kv put secret/my-apps-secrets/mariadb username='giraffe' password='salsa'
-vault kv put secret/my-apps-secrets/mysql username='elephant' password='tacos'
+vault kv put secret/my-dev-apps-secrets/mariadb username='giraffe' password='salsa'
+vault kv put secret/my-prod-apps-secrets/mariadb username='elephant' password='tacos'
 ```
 
-View the new secret via the browser or:
+View the new secrets via the browser or:
 
 ```bash
-vault kv get secret/my-apps-secrets/mariadb
-vault kv get secret/my-apps-secrets/mysql
+vault kv get secret/my-dev-apps-secrets/mariadb
+vault kv get secret/my-prod-apps-secrets/mariadb
 ```
 
-### Create a (access) policy to that secret
+### Create a (access) policy to those secret
 
-```plaintext '/vault/config.d/my-apps-secret-policy.hcl'
-path "secret/data/my-apps-secrets/*" {
+```plaintext title="/vault/config.d/my-dev-apps-secrets-policy.hcl"
+path "secret/data/my-dev-apps-secrets/*" {
   capabilities = ["read"]
 }
 ```
 
-```bash
-vault policy write my-apps-secret-policy /vault/config.d/my-apps-secret-policy.hcl
-vault policy read my-apps-secret-policy
+```plaintext title="/vault/config.d/my-prod-apps-secrets-policy.hcl"
+path "secret/data/my-prod-apps-secrets/*" {
+  capabilities = ["read"]
+}
 ```
 
-or
+Write the hcl to a policy
+
+```bash
+vault policy write my-dev-apps-secret-policy /vault/config.d/my-dev-apps-secrets-policy.hcl
+vault policy write my-prod-apps-secret-policy /vault/config.d/my-prod-apps-secrets-policy.hcl
+vault policy read my-dev-apps-secret-policy
+vault policy read my-prod-apps-secret-policy
+```
+
+or the ad-hoc way
 
 ```bash
 vault policy write my-apps-secret-policy - <<EOF
@@ -61,62 +70,13 @@ EOF
 
 ### Create a token to access the secret
 
-vault token create -policy my-apps-secret-policy
+```bash
+vault token create -policy my-dev-apps-secret-policy
+vault token create -policy my-prod-apps-secret-policy
+```
 
 Try out the token
 
-curl --header "X-Vault-Token: the-token-goes-here" http://vault:8200/v1/secret/data/my-apps-secrets/mariadb | jq -r .data
-
-## Access the secret via a ServiceAccount
-
-Create a role that lets the k8s sa "my-apps-sa" use the policy "my-apps-secret-policy"
-
-```shell
-vault write auth/kubernetes/role/my-apps-role \ `# the role name to use in the pod`
-   bound_service_account_names=my-apps-sa \ `# the serviceaccount to use in the pod`
-   bound_service_account_namespaces='*' \ `# the namespace that the pod uses`
-   policies=my-apps-secret-policy \ `# the acl policy for the secret`
-   ttl=168h
-```
-
-Use the same policy for a different pod in another namespace
-
-``` bash
-vault write auth/kubernetes/role/my-app2s-role \
-   bound_service_account_names=my-app2s-sa \
-   bound_service_account_namespaces='*' \
-   policies=my-apps-secret-policy \
-   ttl=168h
-```
-
-The above maps our Kubernetes service account, used by our pod, to a policy.
-
-## Vault Agent
-
-Vault Agent Injector service configured to target an external Vault. The injector service enables the authentication and secret retrieval for the applications, by adding Vault Agent containers as they are written to the pod automatically it includes specific annotations.
-
-### Inject secrets into the pod
-
-The Vault Agent Injector only modifies a pod or deployment if it contains a specific set of annotations.
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: my-app
-  labels:
-    app: my-app
-  annotations:
-    vault.hashicorp.com/agent-inject: 'true' # enables the Vault Agent Injector service
-    vault.hashicorp.com/role: 'devweb-app' # Vault Kubernetes authentication role
-    vault.hashicorp.com/agent-inject-secret-credentials.txt: 'secret/data/devwebapp/config' # the path to the secret
-spec:
-  serviceAccountName: internal-app
-  containers:
-    - name: app
-      image: burtlo/devwebapp-ruby:k8s
-```
-
-``` bash
-kubectl apply -f my-pod-with-a-secret-from-vault.yaml
+```bash
+curl --header "X-Vault-Token: the-token-goes-here" http://vault:8200/v1/secret/data/my-dev-apps-secrets/mariadb | jq -r .data
 ```
