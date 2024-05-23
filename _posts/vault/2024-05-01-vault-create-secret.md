@@ -1,7 +1,7 @@
 ---
 title: Create secret in Vault
 date: 2024-05-19
-categories: [k8s,Configure]
+categories: [Vault,Secrets]
 tags: [k8s,configure,vault]     # TAG names should always be lowercase
 ---
 
@@ -37,13 +37,17 @@ vault kv get secret/my-prod-apps-secrets/mariadb
 
 ### Create a (access) policy to those secret
 
-```plaintext title="/vault/config.d/my-dev-apps-secrets-policy.hcl"
+vi "/vault/config.d/my-dev-apps-secrets-policy.hcl"
+
+```text
 path "secret/data/my-dev-apps-secrets/*" {
   capabilities = ["read"]
 }
 ```
 
-```plaintext title="/vault/config.d/my-prod-apps-secrets-policy.hcl"
+vi "/vault/config.d/my-prod-apps-secrets-policy.hcl"
+
+```plaintext
 path "secret/data/my-prod-apps-secrets/*" {
   capabilities = ["read"]
 }

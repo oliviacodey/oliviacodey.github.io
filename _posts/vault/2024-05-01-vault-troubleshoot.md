@@ -1,7 +1,7 @@
 ---
 title: Vault troubleshoot
 date: 2024-05-17
-categories: [k8s,Configure]
+categories: [Vault,Configure]
 tags: [k8s,configure,vault,troubleshoot]     # TAG names should always be lowercase
 ---
 
@@ -35,6 +35,7 @@ vault debug -interval=1m -duration=5m -compress=0
 
 You can try to manually access the Kubernetes API (in your app cluster) from your Vault cluster with the same configuration you used to setup Vault.
 
+```bash
 curl -X "POST" "${K8S_HOST}/apis/authentication.k8s.io/v1/tokenreviews" \
      --cacert <(echo $VAULT_SA_CA_CRT)
      -H 'Authorization: Bearer ${TR_ACCOUNT_TOKEN}' \
@@ -46,3 +47,4 @@ curl -X "POST" "${K8S_HOST}/apis/authentication.k8s.io/v1/tokenreviews" \
     "token": "${INTERNAL_APP_TOKEN}"
   }
 }'
+```

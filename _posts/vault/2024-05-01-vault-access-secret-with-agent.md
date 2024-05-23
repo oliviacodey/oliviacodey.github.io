@@ -1,7 +1,7 @@
 ---
 title: Access a secret with Agent Injector
 date: 2024-05-21
-categories: [k8s,Configure]
+categories: [Vault,Secrets]
 tags: [k8s,configure,vault]     # TAG names should always be lowercase
 ---
 

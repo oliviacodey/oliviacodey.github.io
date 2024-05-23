@@ -1,7 +1,7 @@
 ---
 title: Install Vault
 date: 2024-05-20
-categories: [k8s,Install]
+categories: [Vault,Install]
 tags: [k8s,install,vault]     # TAG names should always be lowercase
 ---
 
@@ -35,6 +35,7 @@ Write down the five Unseal Keys and the root token
 Unseal the vault
 
 ```bash
+export VAULT_ADDR='http://127.0.0.1:8200'
 vault operator unseal # Uses Shamir's secret sharing 3/5
 vault operator unseal
 vault operator unseal

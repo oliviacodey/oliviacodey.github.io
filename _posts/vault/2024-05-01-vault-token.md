@@ -1,7 +1,7 @@
 ---
-title: Tokens
+title: Vault Tokens
 date: 2024-05-18
-categories: [k8s,Configure]
+categories: [Vault,Secrets]
 tags: [k8s,configure,vault]     # TAG names should always be lowercase
 ---
 
