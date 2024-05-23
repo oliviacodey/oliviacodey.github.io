@@ -1,8 +1,8 @@
 ---
 title: Example deployment
 date: 2024-05-06
-categories: [k8s,Run]
-tags: [k8s,run,deployment]     # TAG names should always be lowercase
+categories: [k8s,deploy]
+tags: [k8s,deployment]     # TAG names should always be lowercase
 ---
 
 ## Deployment
