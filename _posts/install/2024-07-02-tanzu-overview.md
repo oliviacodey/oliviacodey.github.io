@@ -14,6 +14,11 @@ Tanzu is for vSphere admins to delegate resources to Kubernetes kuster admins so
 * Management Network
 * Workload Network
 * Frontend Network
+
+The Supervisor Cluster needs Workload Management enabled.
+
+Workload management needs vSphere DRS and vSphere HA
+
 The networks needs to be isolated on L2
 Supervisor cluster has one nic in the management network and one nic in the workload cluster.
 The workload cluster needs to access the frontend network.
